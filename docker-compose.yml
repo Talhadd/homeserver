@@ -1,0 +1,232 @@
+
+version: '3'
+services:
+
+ bitwarden:
+   image: bitwardenrs/server:latest
+   container_name: bitwarden
+   restart: unless-stopped
+   ports:
+     - 2223:80
+
+   volumes:
+     - ./data/bitwarden:/data
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+
+ homebridge:
+   container_name: homebridge
+   image: oznu/homebridge:latest
+   restart: always
+   network_mode: host
+   environment:
+     - PGID=0
+     - PUID=0
+     - HOMEBRIDGE_CONFIG_UI=1
+     - HOMEBRIDGE_CONFIG_UI_PORT=8087
+   volumes:
+     - ./data/homebridge:/homebridge
+
+
+ motioneye:
+   container_name: motioneye
+   hostname: HomePi
+   image: ccrisan/motioneye:master-armhf
+   restart: unless-stopped
+   ports:
+     - "8766:8765"
+
+   volumes:
+     - ./data/motioneye/data:/etc/motioneye 
+     - ./data/motioneye/lib:/var/lib/motioneye 
+     - /etc/localtime:/etc/localtime:ro
+
+
+
+ octoprint:
+   image: octoprint/octoprint
+   container_name: octoprint
+   restart: unless-stopped
+   ports:
+     - 2323:80
+
+   volumes:
+     - ./data/octoprint:/octoprint
+
+ openhab:
+   container_name: openhab
+   image: "openhab/openhab:latest"
+   restart: always
+   network_mode: host
+   volumes:
+     - /etc/localtime:/etc/localtime:ro
+     - /etc/timezone:/etc/timezone:ro
+     - ./data/openhab/openhab_addons:/openhab/addons
+     - ./data/openhab/openhab_conf:/openhab/conf
+     - ./data/openhab/openhab_userdata:/openhab/userdata
+   environment:
+     - OPENHAB_HTTP_PORT=8082
+     - OPENHAB_HTTPS_PORT=8443"
+     - EXTRA_JAVA_OPTS=-Duser.timezone=Europe/Berlin"
+
+ traefik:
+   image: traefik:v2.4
+   container_name: traefik
+   restart: unless-stopped
+   ports:
+     - "591:591"
+     - "2280:8080"
+   volumes:
+     - /var/run/docker.sock:/var/run/docker.sock:ro
+     - ./data/traefik/traefik/:/etc/traefik/
+     - ./data/traefik/letsencrypt:/letsencrypt
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+ influxdb:
+   container_name: influxdb
+   image: influxdb:1.8
+   restart: unless-stopped
+   ports:
+   - "8086:8086"
+   - "8083:8083"
+   - "2003:2003"
+   environment:
+   - "INFLUXDB_DB=MAIN"
+   - "INFLUXDB_REPORTING_DISABLED=false"
+   - "INFLUXDB_STORE_ENABLED=false"
+   - "INFLUXDB_QUERY_LOG_ENABLED=false"
+   - "INFLUXDB_ADMIN_ENABLED=true"
+   - "INFLUXDB_USER=admin"
+   - "INFLUXDB_USER_PASSWORD=raspberry"
+   volumes:
+   - ./data/influxdb/data:/var/lib/influxdb
+   - ./backups/influxdb/db:/var/lib/influxdb/backup
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+ grafana:
+   container_name: grafana
+   image: grafana/grafana:latest
+   restart: unless-stopped
+   user: "0"
+   ports:
+     - "3000:3000"
+   volumes:
+     - ./data/grafana/data:/var/lib/grafana
+     - ./data/grafana/log:/var/log/grafana
+     - ./data/grafana/provisioning:/etc/grafana/provisioning
+   environment:
+     - GF_PATHS_DATA=/var/lib/grafana
+     - GF_PATHS_LOGS=/var/log/grafana
+   depends_on:
+     - influxdb
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+ speedtest:
+     container_name: speedtest
+     image: henrywhitaker3/speedtest-tracker
+     ports:
+         - "8765:80"
+     volumes:
+        - ./data/speedtest/config:/config
+     environment:
+         - OOKLA_EULA_GDPR=true
+     logging:
+         driver: "json-file"
+         options:
+             max-file: "10"
+             max-size: "200k"
+     restart: unless-stopped
+
+ heimdall:
+   image: lscr.io/linuxserver/heimdall
+   container_name: heimdall
+   environment:
+     - PUID=1000
+     - PGID=1000
+     - TZ=Europe/London
+   volumes:
+     - ./data/heimdall/config:/config
+   ports:
+     - "80:80"
+     - "443:443"
+   restart: unless-stopped
+
+ vscode:
+   image: ghcr.io/linuxserver/code-server
+   container_name: vscode
+   restart: unless-stopped
+   ports:
+     - "2222:8443"
+   environment:
+     - PUID=0
+     - GUID=0
+     - TZ=Europe/Berlin
+   volumes:
+     - ./data/vscode/config:/config
+     - ./:/docker
+
+
+ portainer:
+   container_name: portainer
+   image: portainer/portainer-ce
+   restart: unless-stopped
+   ports:
+    - "8001:8000"
+    - "9001:9000"
+   volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./data/portainer/data:/data
+
+
+ nextcloud:
+   image: nextcloud
+   container_name: nextcloud
+   ports:
+     - "8282:80"
+   volumes:
+     - ./data/nextcloud/html:/var/www/html
+   restart: unless-stopped
+   depends_on: 
+     - nextcloud_db
+   links:
+     - nextcloud_db
+   environment:
+     - MYSQL_HOST=nextcloud_db
+     - MYSQL_PASSWORD=>TUF/MZ-2D$Bksaa
+     - MYSQL_DATABASE=nextcloud
+     - MYSQL_USER=nextcloud
+     - TRUSTED_PROXIES=172.18.0.0/16
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+ nextcloud_db:
+   image: yobasystems/alpine-mariadb:10.4.17
+   container_name: nextcloud_db
+   volumes:
+     - ./data/nextcloud/db:/var/lib/mysql
+   environment:
+     - MYSQL_ROOT_PASSWORD=>TUF/MZ-2D$Bksaa
+     - MYSQL_DATABASE=nextcloud
+     - MYSQL_USER=nextcloud
+     - MYSQL_PASSWORD=>TUF/MZ-2D$Bksaa
+   restart: unless-stopped
+   logging:
+     options:
+       max-size: "5m"
+       max-file: "3"
+
+
