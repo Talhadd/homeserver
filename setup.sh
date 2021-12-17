@@ -5,20 +5,20 @@ echo "Bitte als ADMIN ausfürhen"
 apt-get update
 apt-get upgrade -y
 #remove docker
-apt-get remove docker docker-engine docker.io containerd runc
+apt-get remove docker docker-engine docker.io containerd runc -y
 #install docker
-apt-get install ca-certificates 
-apt-get istall curl 
-apt-get install gnupg 
-apt-get install lsb-release
+apt-get install ca-certificates -y
+apt-get istall curl -y
+apt-get install gnupg -y
+apt-get install lsb-release -y
 
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 
-apt-get update
-apt-get install docker-ce docker-ce-cli containerd.io
+apt-get update -y
+apt-get install docker-ce docker-ce-cli containerd.io -y
 
 #docker-compose
 curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
