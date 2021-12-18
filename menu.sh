@@ -2,15 +2,16 @@
 
 
 PS3='Please enter your choice: '
-options=("docker.cp" "X" "X" "Quit")
+options=("docker.cp" "Setup" "X" "Quit")
 select opt in "${options[@]}"
 do
     case $opt in
         "docker.cp")
             docker-compose up -d
             ;;
-        "Option 2")
-            echo "x"
+        "Setup")
+            chmod +x setup.sh
+            bash setup.sh
             ;;
         "Option 3")
             echo "x"

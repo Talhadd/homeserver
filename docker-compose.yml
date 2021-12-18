@@ -2,20 +2,6 @@
 version: '3'
 services:
 
- bitwarden:
-   image: bitwardenrs/server:latest
-   container_name: bitwarden
-   restart: unless-stopped
-   ports:
-     - 2223:80
-
-   volumes:
-     - ./data/bitwarden:/data
-   logging:
-     options:
-       max-size: "5m"
-       max-file: "3"
-
 
  homebridge:
    container_name: homebridge
@@ -30,63 +16,6 @@ services:
    volumes:
      - ./data/homebridge:/homebridge
 
-
- motioneye:
-   container_name: motioneye
-   hostname: HomePi
-   image: ccrisan/motioneye:master-armhf
-   restart: unless-stopped
-   ports:
-     - "8766:8765"
-
-   volumes:
-     - ./data/motioneye/data:/etc/motioneye 
-     - ./data/motioneye/lib:/var/lib/motioneye 
-     - /etc/localtime:/etc/localtime:ro
-
-
-
- octoprint:
-   image: octoprint/octoprint
-   container_name: octoprint
-   restart: unless-stopped
-   ports:
-     - 2323:80
-
-   volumes:
-     - ./data/octoprint:/octoprint
-
- openhab:
-   container_name: openhab
-   image: "openhab/openhab:latest"
-   restart: always
-   network_mode: host
-   volumes:
-     - /etc/localtime:/etc/localtime:ro
-     - /etc/timezone:/etc/timezone:ro
-     - ./data/openhab/openhab_addons:/openhab/addons
-     - ./data/openhab/openhab_conf:/openhab/conf
-     - ./data/openhab/openhab_userdata:/openhab/userdata
-   environment:
-     - OPENHAB_HTTP_PORT=8082
-     - OPENHAB_HTTPS_PORT=8443"
-     - EXTRA_JAVA_OPTS=-Duser.timezone=Europe/Berlin"
-
- traefik:
-   image: traefik:v2.4
-   container_name: traefik
-   restart: unless-stopped
-   ports:
-     - "591:591"
-     - "2280:8080"
-   volumes:
-     - /var/run/docker.sock:/var/run/docker.sock:ro
-     - ./data/traefik/traefik/:/etc/traefik/
-     - ./data/traefik/letsencrypt:/letsencrypt
-   logging:
-     options:
-       max-size: "5m"
-       max-file: "3"
 
  influxdb:
    container_name: influxdb
@@ -133,21 +62,6 @@ services:
        max-size: "5m"
        max-file: "3"
 
- speedtest:
-     container_name: speedtest
-     image: henrywhitaker3/speedtest-tracker
-     ports:
-         - "8765:80"
-     volumes:
-        - ./data/speedtest/config:/config
-     environment:
-         - OOKLA_EULA_GDPR=true
-     logging:
-         driver: "json-file"
-         options:
-             max-file: "10"
-             max-size: "200k"
-     restart: unless-stopped
 
  heimdall:
    image: lscr.io/linuxserver/heimdall

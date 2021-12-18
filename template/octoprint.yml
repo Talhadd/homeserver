@@ -1,0 +1,9 @@
+ octoprint:
+   image: octoprint/octoprint
+   container_name: octoprint
+   restart: unless-stopped
+   ports:
+     - 2323:80
+
+   volumes:
+     - ./data/octoprint:/octoprint
